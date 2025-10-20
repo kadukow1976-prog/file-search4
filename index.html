@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Поиск файлов — УграРемКомп</title>
+<meta name="color-scheme" content="light dark" />
+<style>
+:root{
+  --bg:#0b1220;           /* тёмный фон */
+  --panel:#0f172a;        /* панели */
+  --muted:#93a3b8;        /* вторичный текст */
+  --text:#e5e7eb;         /* основной текст */
+  --border:#1e293b;       /* границы */
+  --accent:#16a34a;       /* зелёный акцент */
+  --accent-2:#22c55e;
+  --chip:#0b3d24;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --muted:#6b7280; --text:#111827; --border:#e5e7eb;
+    --chip:#e8f7ee;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial;
+  background:var(--bg); color:var(--text);
+}
+.app{
+  min-height:100%;
+  display:flex; flex-direction:column;
+}
+.container{
+  width:100%; max-width:1100px; margin:0 auto; padding:24px 16px 48px;
+}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+h1{font-size:28px;margin:0;font-weight:800;letter-spacing:.2px}
+.ghost-btn{
+  background:transparent;color:var(--text);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer
+}
+.ghost-btn:hover{border-color:var(--muted)}
+.search-card{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:14px;
+}
+.search-row{display:flex; gap:10px; flex-wrap:wrap}
+.input{
+  flex:1 1 320px; min-width:200px;
+  padding:14px 16px; border:1px solid var(--border); background:transparent; color:var(--text);
+  border-radius:12px; outline:none;
+}
+.btn{
+  background:#111827;color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer
+}
+.btn:hover{background:var(--accent)}
+.help{margin:10px 0 0;color:var(--muted);font-size:14px}
+
+.table-card{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-top:14px
+}
+.thead,.trow{
+  display:grid; grid-template-columns:1fr 120px 120px 90px; align-items:center;
+}
+.thead{background:color-mix(in oklab, var(--panel), white 6%); border-bottom:1px solid var(--border); padding:12px 14px; font-weight:800}
+.trow{padding:12px 14px; border-top:1px solid var(--border)}
+.title{font-weight:700; word-break:break-word}
+.tags{color:var(--muted); font-size:12px; margin-top:4px}
+.size{white-space:nowrap}
+.open{
+  display:inline-block;background:#111827;color:#fff;text-decoration:none;border-radius:10px;padding:8px 12px;font-weight:800
+}
+.open:hover{background:var(--accent)}
+.empty{padding:14px;color:var(--muted);display:none}
+.pager{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-top:1px solid var(--border)}
+.meta{margin:10px 2px 0;color:var(--muted)}
+mark{background:var(--chip); color:inherit; padding:0 2px; border-radius:3px}
+
+/* Мобилка: карточная раскладка */
+.hide-sm{display:block}
+.show-sm{display:none}
+.inline{display:none}
+@media (max-width:700px){
+  .thead{display:none}
+  .trow{grid-template-columns:1fr auto; gap:12px}
+  .hide-sm{display:none}
+  .show-sm{display:inline-block}
+  .inline{display:flex; gap:12px; color:var(--muted); font-size:12px; margin-top:6px}
+  .inline .clicks::before{content:"Клики: "}
+}
+
+/* Лоадер */
+.loader{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.loader:before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);border-top-color:transparent;display:inline-block;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Экран пароля */
+#lockScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:10}
+.lock-box{
+  background:var(--panel);border:1px solid var(--border);padding:28px;border-radius:14px;width:min(380px,90%);
+  box-shadow:0 10px 30px rgba(0,0,0,.25)
+}
+.lock-box h3{margin:0 0 10px;font-size:20px}
+.lock-input{width:100%;padding:12px 14px;border:1px solid var(--border);background:transparent;color:var(--text);border-radius:10px}
+.lock-btn{margin-top:10px;width:100%}
+.err{color:#ef4444;font-size:14px;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Экран пароля -->
+  <div id="lockScreen" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+    <div class="lock-box">
+      <h3 id="lockTitle">Введите пароль</h3>
+      <input id="pass" class="lock-input" type="password" placeholder="Пароль" autocomplete="current-password" />
+      <button id="loginBtn" class="btn lock-btn">Войти</button>
+      <div id="err" class="err">Неверный пароль</div>
+    </div>
+  </div>
+
+  <!-- Приложение -->
+  <main id="app" style="display:none">
+    <div class="container">
+      <div class="topbar">
+        <h1>Найти файл</h1>
+        <button id="logout" class="ghost-btn" title="Заблокировать страницу">Выйти</button>
+      </div>
+
+      <section class="search-card" aria-label="Поиск">
+        <div class="search-row">
+          <input id="q" class="input" type="search" inputmode="search" placeholder="Например: драйвер, прошивка, инструкция…" aria-label="Поиск по файлам" />
+          <button id="showAll" class="btn" type="button">Показать всё</button>
+        </div>
+        <p class="help">Минимум 2 буквы для поиска. «Показать всё» — выведет весь список.</p>
+      </section>
+
+      <section class="table-card" aria-label="Результаты">
+        <div class="thead">
+          <div>Файл</div><div>Размер</div><div>Открыть</div><div>Клики</div>
+        </div>
+        <div id="rows"></div>
+        <div id="empty" class="empty">Ничего не найдено — попробуйте по-другому</div>
+        <div id="pager" class="pager">
+          <button id="prev" class="ghost-btn" disabled>Назад</button>
+          <div id="pageInfo" class="muted">Стр. 1/1</div>
+          <button id="next" class="ghost-btn" disabled>Вперёд</button>
+        </div>
+      </section>
+
+      <p id="meta" class="meta loader">Загружается…</p>
+    </div>
+  </main>
+
+</div>
+
+<script>
+/* ==== НАСТРОЙКИ ==== */
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQr5tjcoANOKmeK8Mx4B2nHKrHdprWIcVrMBGd1Iqo4NW3-0xO9dHaTGR5HWxFa3DWWOAl6AkxVF7Lw/pub?gid=0&single=true&output=csv";
+const PASS_HASH_HEX = "ca4d4c3c5b0d70ba148f9774d92594c86954d2235545f73b6ae853608f5414f1"; // ваш SHA-256
+const PAGE_SIZE = 20;
+const CACHE_TTL_MIN = 30; // кэш CSV в localStorage, минут
+const ACCESS_KEY = "fs_access_ok_v1";
+/* =================== */
+
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const lockScreen=$("#lockScreen"), app=$("#app"), err=$("#err");
+const pass=$("#pass"), loginBtn=$("#loginBtn"), logoutBtn=$("#logout");
+const rows=$("#rows"), empty=$("#empty"), meta=$("#meta");
+const q=$("#q"), showAll=$("#showAll"), prev=$("#prev"), next=$("#next"), pageInfo=$("#pageInfo");
+
+let unlocked = sessionStorage.getItem(ACCESS_KEY) === "1";
+let DATA=[], FILTERED=[], page=1, _loaded=false;
+
+/* Утилиты */
+const norm=s=>(s||"").toString().toLowerCase().normalize("NFKD").replace(/[ё]/g,"е").replace(/[\u0300-\u036f]/g,"").trim();
+const esc=s=>(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+const mark=(html,q)=>{ if(!q) return esc(html); try{const re=new RegExp("("+q.replace(/[.*+?^${}()|[\\]\\\\]/g,"\\$&")+")","ig"); return esc(html).replace(re,"<mark>$1</mark>");}catch{return esc(html);}};
+
+/* Парсер CSV: auto , / ; + кавычки */
+function splitCSVLine(line, d){
+  const out=[]; let cur=""; let quoted=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i], n=line[i+1];
+    if(c === '"'){ if(quoted && n === '"'){ cur+='"'; i++; } else { quoted=!quoted; } }
+    else if(c === d && !quoted){ out.push(cur); cur=""; }
+    else cur += c;
+  }
+  out.push(cur); return out;
+}
+function parseCSV(text){
+  const lines = text.replace(/\r/g,"").split("\n").filter(x=>x.trim().length);
+  if(!lines.length) return [];
+  const first = lines[0], delim = (first.match(/;/g)||[]).length > (first.match(/,/g)||[]).length ? ";" : ",";
+  const head = splitCSVLine(lines[0], delim).map(norm);
+  return lines.slice(1).map(line=>{
+    const cells = splitCSVLine(line, delim); const o={};
+    head.forEach((h,i)=>o[h]=cells[i]??""); return o;
+  });
+}
+function mapRow(r){
+  const g=k=>r[k]??r[k?.toLowerCase?.()]??"";
+  return {
+    name:g("name")||g("название")||g("file")||g("файл"),
+    url :g("url") ||g("ссылка")  ||g("link"),
+    size:g("size")||g("размер"),
+    tags:g("tags")||g("теги"),
+    desc:g("desc")||g("описание")
+  };
+}
+
+/* Кэш CSV в localStorage */
+const CSV_CACHE_KEY="fs_csv_cache_v2", CSV_CACHE_TTL="fs_csv_ttl_v2";
+function loadCache(){
+  try{
+    const ttl=+localStorage.getItem(CSV_CACHE_TTL)||0;
+    if(Date.now()>ttl) return null;
+    const blob=localStorage.getItem(CSV_CACHE_KEY);
+    return blob?JSON.parse(blob):null;
+  }catch{ return null; }
+}
+function saveCache(data){
+  try{
+    localStorage.setItem(CSV_CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(CSV_CACHE_TTL, (Date.now()+CACHE_TTL_MIN*60*1000).toString());
+  }catch{}
+}
+
+/* Кликовые счётчики */
+const CK="fs_clicks_v2";
+function getClicks(){ try{return JSON.parse(localStorage.getItem(CK)||"{}");}catch{return{}} }
+function setClicks(v){ try{localStorage.setItem(CK, JSON.stringify(v));}catch{} }
+function incClick(u){ const m=getClicks(); m[u]=(m[u]||0)+1; setClicks(m); }
+
+/* Пагинация */
+function paginate(list,p,size){
+  const total=Math.max(1,Math.ceil(list.length/size));
+  const cur=Math.min(Math.max(1,p),total);
+  const start=(cur-1)*size;
+  return {slice:list.slice(start,start+size), cur, total};
+}
+
+/* Рендер */
+function render(list,qstr){
+  const {slice,cur,total}=paginate(list,page,PAGE_SIZE); page=cur;
+  const clicks=getClicks();
+  rows.innerHTML = slice.map(r=>{
+    const a=mapRow(r); const title=a.desc?`${a.name} — ${a.desc}`:a.name; const url=esc(a.url||""); const cnt=clicks[a.url]||0;
+    return `<div class="trow">
+      <div>
+        <div class="title">${mark(title, norm(qstr))}</div>
+        ${a.tags?`<div class="tags">#${esc(a.tags)}</div>`:""}
+        <div class="inline"><span class="size">${esc(a.size||"—")}</span><span class="clicks" data-clicks-for="${url}">${cnt}</span></div>
+      </div>
+      <div class="size hide-sm">${esc(a.size||"—")}</div>
+      <div class="hide-sm">${url?`<a class="open open-btn" href="${url}" target="_blank" rel="noopener" data-url="${url}">Открыть</a>`:"—"}</div>
+      <div class="hide-sm" data-clicks-for="${url}">${cnt}</div>
+      <div class="show-sm">${url?`<a class="open open-btn" href="${url}" target="_blank" rel="noopener" data-url="${url}">Открыть</a>`:""}</div>
+    </div>`;
+  }).join("");
+  empty.style.display = slice.length?"none":"block";
+  meta.classList.remove("loader");
+  meta.textContent = `Загружено: ${DATA.length} • Найдено: ${list.length}`;
+  pageInfo.textContent = `Стр. ${cur} / ${total}`;
+  prev.disabled = cur<=1; next.disabled = cur>=total;
+
+  $$(".open-btn").forEach(a=>{
+    a.addEventListener("click",()=>{
+      const u=a.getAttribute("data-url"); if(!u) return;
+      incClick(u);
+      document.querySelectorAll('[data-clicks-for="'+CSS.escape(u)+'"]').forEach(el=>{
+        el.textContent=(parseInt(el.textContent)||0)+1;
+      });
+    });
+  });
+}
+
+/* Поиск (дебаунс 200мс) */
+let t=null;
+q.addEventListener("input",(e)=>{
+  const v=(e.target.value||"").trim();
+  clearTimeout(t);
+  t=setTimeout(()=>{
+    if(v.length<2){ FILTERED=[]; render([], ""); return; }
+    const n=norm(v);
+    FILTERED = DATA.filter(r=>{
+      const a=mapRow(r); const blob=[a.name,a.desc,a.tags,a.url].map(norm).join(" ");
+      return blob.includes(n);
+    });
+    page=1; render(FILTERED, v);
+  },200);
+});
+showAll.addEventListener("click",()=>{ page=1; FILTERED=DATA.slice(); render(FILTERED, ""); });
+prev.addEventListener("click",()=>{ if(page>1){ page--; render(FILTERED.length?FILTERED:[], q.value); }});
+next.addEventListener("click",()=>{ page++; render(FILTERED.length?FILTERED:[], q.value); }});
+
+/* Загрузка CSV (после разблокировки) */
+async function ensureDataLoaded(){
+  if(_loaded) return;
+  try{
+    const cached=loadCache();
+    if(cached){ DATA=cached; _loaded=true; render([], ""); return; }
+    const res=await fetch(CSV_URL,{cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const txt=await res.text();
+    DATA=parseCSV(txt);
+    _loaded=true; render([], ""); saveCache(DATA);
+  }catch(e){
+    rows.innerHTML = `<div style="padding:14px;color:#ef4444">Ошибка загрузки CSV: ${esc(e.message)}</div>`;
+    empty.style.display="none";
+    $("#pager").style.display="none";
+    meta.classList.remove("loader");
+    meta.textContent="Загрузка не удалась";
+  }
+}
+
+/* Экран пароля */
+async function sha256(str){
+  const enc=new TextEncoder().encode(str);
+  const buf=await crypto.subtle.digest("SHA-256", enc);
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function applyLockUI(){
+  if(unlocked){ lockScreen.style.display="none"; app.style.display="block"; }
+  else{ app.style.display="none"; lockScreen.style.display="flex"; }
+}
+loginBtn.addEventListener("click", async ()=>{
+  err.style.display="none";
+  const val=(pass.value||"").trim();
+  const hex=await sha256(val);
+  if(hex===PASS_HASH_HEX){
+    unlocked=true; sessionStorage.setItem(ACCESS_KEY,"1"); applyLockUI(); ensureDataLoaded(); q.focus();
+  }else{
+    err.style.display="block"; setTimeout(()=>err.style.display="none",2000);
+  }
+});
+pass.addEventListener("keydown", e => { if(e.key==="Enter") loginBtn.click(); });
+logoutBtn.addEventListener("click", ()=>{
+  unlocked=false; sessionStorage.removeItem(ACCESS_KEY);
+  q.value=""; rows.innerHTML=""; meta.textContent="Доступ закрыт";
+  applyLockUI();
+});
+
+/* Старт */
+applyLockUI();
+if(unlocked) ensureDataLoaded();
+</script>
+</body>
+</html>
