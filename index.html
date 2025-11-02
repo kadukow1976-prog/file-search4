@@ -2,348 +2,584 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Поиск файлов — УграРемКомп</title>
-<meta name="color-scheme" content="light dark" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>MiniCRM Mobile v2 — Android</title>
+<meta name="theme-color" content="#0b0f14" />
 <style>
 :root{
-  --bg:#0b1220;           /* тёмный фон */
-  --panel:#0f172a;        /* панели */
-  --muted:#93a3b8;        /* вторичный текст */
-  --text:#e5e7eb;         /* основной текст */
-  --border:#1e293b;       /* границы */
-  --accent:#16a34a;       /* зелёный акцент */
-  --accent-2:#22c55e;
-  --chip:#0b3d24;
+  --bg:#0b0f14; --panel:#101621; --soft:#0e141d; --glass:rgba(255,255,255,.05);
+  --border:#1b2533; --text:#e7eef7; --muted:#9aa7bb; --accent:#19c37d; --danger:#ff5d5d; --warn:#ffb020;
+  --radius:16px; --shadow:0 8px 28px rgba(0,0,0,.4);
 }
-@media (prefers-color-scheme: light){
-  :root{
-    --bg:#f6f7f9; --panel:#ffffff; --muted:#6b7280; --text:#111827; --border:#e5e7eb;
-    --chip:#e8f7ee;
-  }
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial;
-  background:var(--bg); color:var(--text);
-}
-.app{
-  min-height:100%;
-  display:flex; flex-direction:column;
-}
-.container{
-  width:100%; max-width:1100px; margin:0 auto; padding:24px 16px 48px;
-}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-h1{font-size:28px;margin:0;font-weight:800;letter-spacing:.2px}
-.ghost-btn{
-  background:transparent;color:var(--text);border:1px solid var(--border);
-  border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer
-}
-.ghost-btn:hover{border-color:var(--muted)}
-.search-card{
-  background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:14px;
-}
-.search-row{display:flex; gap:10px; flex-wrap:wrap}
-.input{
-  flex:1 1 320px; min-width:200px;
-  padding:14px 16px; border:1px solid var(--border); background:transparent; color:var(--text);
-  border-radius:12px; outline:none;
-}
-.btn{
-  background:#111827;color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer
-}
-.btn:hover{background:var(--accent)}
-.help{margin:10px 0 0;color:var(--muted);font-size:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:linear-gradient(180deg,var(--bg),#0a0e13 60%,#090d12);color:var(--text);font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto}
 
-.table-card{
-  background:var(--panel); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-top:14px
-}
-.thead,.trow{
-  display:grid; grid-template-columns:1fr 120px 120px 90px; align-items:center;
-}
-.thead{background:color-mix(in oklab, var(--panel), white 6%); border-bottom:1px solid var(--border); padding:12px 14px; font-weight:800}
-.trow{padding:12px 14px; border-top:1px solid var(--border)}
-.title{font-weight:700; word-break:break-word}
-.tags{color:var(--muted); font-size:12px; margin-top:4px}
-.size{white-space:nowrap}
-.open{
-  display:inline-block;background:#111827;color:#fff;text-decoration:none;border-radius:10px;padding:8px 12px;font-weight:800
-}
-.open:hover{background:var(--accent)}
-.empty{padding:14px;color:var(--muted);display:none}
-.pager{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-top:1px solid var(--border)}
-.meta{margin:10px 2px 0;color:var(--muted)}
-mark{background:var(--chip); color:inherit; padding:0 2px; border-radius:3px}
+.header{position:sticky;top:0;z-index:20;display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(11,15,20,.95),rgba(11,15,20,.72));backdrop-filter:saturate(120%) blur(10px)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#42ffb7,var(--accent));box-shadow:0 0 16px var(--accent)}
+.brand h1{margin:0;font-weight:600;font-size:16px}
+.header .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.select,.iconbtn{background:var(--soft);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:8px}
+.iconbtn{background:var(--glass);color:var(--muted)}
 
-/* Мобилка: карточная раскладка */
-.hide-sm{display:block}
-.show-sm{display:none}
-.inline{display:none}
-@media (max-width:700px){
-  .thead{display:none}
-  .trow{grid-template-columns:1fr auto; gap:12px}
-  .hide-sm{display:none}
-  .show-sm{display:inline-block}
-  .inline{display:flex; gap:12px; color:var(--muted); font-size:12px; margin-top:6px}
-  .inline .clicks::before{content:"Клики: "}
-}
+.search{display:flex;gap:8px;width:100%}
+.search input{flex:1;background:var(--soft);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px}
+.search input::placeholder{color:var(--muted)}
+.badge{white-space:nowrap;border:1px dashed var(--border);padding:10px 12px;border-radius:12px;color:var(--muted)}
 
-/* Лоадер */
-.loader{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
-.loader:before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);border-top-color:transparent;display:inline-block;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+.tabs{position:sticky;top:64px;z-index:19;display:flex;gap:8px;overflow:auto;padding:8px 12px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(13,18,26,.9),rgba(13,18,26,.6))}
+.tab{flex:0 0 auto;padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:var(--glass);color:var(--muted)}
+.tab.active{color:var(--text);border-color:rgba(25,195,125,.35);background:linear-gradient(180deg,rgba(25,195,125,.14),rgba(25,195,125,.08));box-shadow:0 4px 18px rgba(25,195,125,.16)}
 
-/* Экран пароля */
-#lockScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:10}
-.lock-box{
-  background:var(--panel);border:1px solid var(--border);padding:28px;border-radius:14px;width:min(380px,90%);
-  box-shadow:0 10px 30px rgba(0,0,0,.25)
-}
-.lock-box h3{margin:0 0 10px;font-size:20px}
-.lock-input{width:100%;padding:12px 14px;border:1px solid var(--border);background:transparent;color:var(--text);border-radius:10px}
-.lock-btn{margin-top:10px;width:100%}
-.err{color:#ef4444;font-size:14px;margin-top:10px;display:none}
+.pages{position:relative}
+.page{display:none;min-height:calc(100dvh - 180px);padding:14px}
+.page.active{display:block;animation:fade .18s}
+@keyframes fade{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;margin:10px 0}
+.card .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card .title{font-weight:700}
+.card .muted{color:var(--muted)}
+.card::after{content:"";position:absolute;inset:2px;border-radius:calc(var(--radius) - 2px);pointer-events:none;opacity:.75}
+.card.glow-red::after{box-shadow:inset 0 0 24px rgba(255,93,93,.45), inset 0 0 60px rgba(255,93,93,.2)}
+.card.glow-green::after{box-shadow:inset 0 0 24px rgba(25,195,125,.42), inset 0 0 60px rgba(25,195,125,.18)}
+.card.dim-done{opacity:.75;filter:saturate(.85)}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:12px;padding:6px 8px;border-radius:999px;border:1px solid var(--border);background:var(--glass);color:var(--muted)}
+.chip.ok{color:#b8f7d9;border-color:rgba(25,195,125,.4)}
+.chip.warn{color:#ffe0ad;border-color:rgba(255,176,32,.4)}
+.chip.bad{color:#ffb8b8;border-color:rgba(255,93,93,.4)}
+
+.actions{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--panel);color:var(--text);text-align:center}
+.btn.primary{background:linear-gradient(180deg,#1dda8a,#19c37d);border-color:#19c37d;color:#062e1e;font-weight:800}
+.btn.danger{background:linear-gradient(180deg,#ff7b7b,#ff5d5d);border-color:#ff5d5d;color:#2b0707;font-weight:800}
+.btn.ghost{background:var(--soft)}
+.btn.link{background:var(--glass)}
+
+.form{display:grid;gap:10px}
+.field{display:grid;gap:6px}
+.field label{font-size:13px;color:var(--muted)}
+.field input,.field textarea,.field select{padding:12px;background:var(--soft);border:1px solid var(--border);border-radius:12px;color:var(--text);outline:none}
+.field textarea{min-height:80px;resize:vertical}
+
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:linear-gradient(180deg,rgba(25,195,125,.12),rgba(25,195,125,.04));border:1px solid rgba(25,195,125,.35);border-radius:14px;padding:12px}
+.kpi h3{margin:0 0 6px 0;font-size:13px;color:var(--muted)}
+.kpi b{font-size:18px}
+
+.navbar{position:sticky;bottom:0;z-index:18;border-top:1px solid var(--border);padding:10px;background:linear-gradient(0deg,rgba(9,12,16,.95),rgba(9,12,16,.75));backdrop-filter:blur(8px)}
+.navrow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.navbtn{padding:10px;border-radius:12px;border:1px solid var(--border);background:var(--glass);color:var(--muted)}
+.navbtn.active{color:var(--text);border-color:rgba(25,195,125,.35);box-shadow:0 4px 18px rgba(25,195,125,.15)}
+
+.stars{display:flex;gap:6px}
+.star{font-size:20px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.star.filled{color:#ffd45b}
+
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111;color:#fff;border:1px solid #333;padding:10px 12px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none}
+.toast.show{opacity:1}
+
+.banner{position:sticky;top:108px;z-index:17;padding:8px 12px;border-bottom:1px solid rgba(25,195,125,.35);display:none}
+.banner.ok{background:linear-gradient(90deg,rgba(25,195,125,.16),rgba(25,195,125,.08))}
+.banner.warn{background:linear-gradient(90deg,rgba(255,176,32,.18),rgba(255,176,32,.06));border-color:rgba(255,176,32,.45)}
+.banner.block{background:linear-gradient(90deg,rgba(255,93,93,.18),rgba(255,93,93,.06));border-color:rgba(255,93,93,.45)}
+
+.blocker{position:fixed;inset:0;background:rgba(11,15,20,.88);backdrop-filter:blur(4px);display:none;z-index:50;align-items:center;justify-content:center}
+.blocker .modal{max-width:520px;margin:16px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px}
+
+.logo{display:flex;align-items:center;gap:12px}
+.logo .mark{width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#42ffb7,var(--accent));box-shadow:0 0 24px rgba(25,195,125,.45)}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.paygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.paybtn{padding:12px;border-radius:12px;border:1px dashed var(--border);background:var(--glass);text-align:center}
+.small{font-size:12px;color:var(--muted)}
+.phone{color:#b8f7d9;text-decoration:none}
+
 </style>
 </head>
 <body>
-<div class="app">
-
-  <!-- Экран пароля -->
-  <div id="lockScreen" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
-    <div class="lock-box">
-      <h3 id="lockTitle">Введите пароль</h3>
-      <input id="pass" class="lock-input" type="password" placeholder="Пароль" autocomplete="current-password" />
-      <button id="loginBtn" class="btn lock-btn">Войти</button>
-      <div id="err" class="err">Неверный пароль</div>
+  <div class="header">
+    <div class="brand"><div class="dot"></div><h1>MiniCRM v2 — мастерская</h1></div>
+    <div class="right">
+      <select id="profile" class="select" title="Профиль"></select>
+      <button id="add-profile" class="iconbtn" title="Добавить профиль">＋</button>
     </div>
   </div>
 
-  <!-- Приложение -->
-  <main id="app" style="display:none">
-    <div class="container">
-      <div class="topbar">
-        <h1>Найти файл</h1>
-        <button id="logout" class="ghost-btn" title="Заблокировать страницу">Выйти</button>
-      </div>
-
-      <section class="search-card" aria-label="Поиск">
-        <div class="search-row">
-          <input id="q" class="input" type="search" inputmode="search" placeholder="Например: драйвер, прошивка, инструкция…" aria-label="Поиск по файлам" />
-          <button id="showAll" class="btn" type="button">Показать всё</button>
-        </div>
-        <p class="help">Минимум 2 буквы для поиска. «Показать всё» — выведет весь список.</p>
-      </section>
-
-      <section class="table-card" aria-label="Результаты">
-        <div class="thead">
-          <div>Файл</div><div>Размер</div><div>Открыть</div><div>Клики</div>
-        </div>
-        <div id="rows"></div>
-        <div id="empty" class="empty">Ничего не найдено — попробуйте по-другому</div>
-        <div id="pager" class="pager">
-          <button id="prev" class="ghost-btn" disabled>Назад</button>
-          <div id="pageInfo" class="muted">Стр. 1/1</div>
-          <button id="next" class="ghost-btn" disabled>Вперёд</button>
-        </div>
-      </section>
-
-      <p id="meta" class="meta loader">Загружается…</p>
+  <div class="header" style="gap:0;padding-top:0">
+    <div class="search" style="width:100%">
+      <input id="q" placeholder="Поиск: имя, телефон, модель, #ID… (по буквам/цифрам)" autocomplete="off" />
+      <div class="badge" id="stat">0 клиентов</div>
     </div>
-  </main>
+  </div>
 
-</div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-page="home">Главная</button>
+    <button class="tab" data-page="debts">Просрочка</button>
+    <button class="tab" data-page="work">В работе</button>
+    <button class="tab" data-page="done">Завершённые</button>
+    <button class="tab" data-page="edit">Новый/Правка</button>
+    <button class="tab" data-page="view">Просмотр</button>
+    <button class="tab" data-page="accounts">Аккаунты</button>
+    <button class="tab" data-page="about">О программе</button>
+  </div>
+
+  <div class="banner" id="lic-banner"></div>
+
+  <div class="pages" id="pages">
+    <section class="page active" id="page-home">
+      <div class="kpis" id="home-kpis"></div>
+      <div id="home-list"></div>
+    </section>
+
+    <section class="page" id="page-debts">
+      <div id="debts-summary"></div>
+      <div id="debts-list"></div>
+    </section>
+
+    <section class="page" id="page-work"><div id="work-list"></div></section>
+    <section class="page" id="page-done"><div id="done-list"></div></section>
+
+    <section class="page" id="page-edit">
+      <form class="form" id="form">
+        <input type="hidden" id="f-id" />
+        <div class="field"><label>Имя клиента</label><input id="f-name" required /></div>
+        <div class="field"><label>Телефон</label><input id="f-phone" inputmode="tel" placeholder="+7…" /></div>
+        <div class="field"><label>Модель аппарата</label><input id="f-device" /></div>
+        <div class="field"><label>Проблема</label><textarea id="f-issue"></textarea></div>
+
+        <div class="field"><label>Стоимость работы ₽</label><input id="f-labor" type="number" inputmode="numeric" value="0" /></div>
+        <div class="field"><label>Себестоимость запчастей ₽</label><input id="f-parts" type="number" inputmode="numeric" value="0" /></div>
+        <div class="field"><label>Оплачено ₽</label><input id="f-paid" type="number" inputmode="numeric" value="0" /></div>
+        <div class="field"><label>Срок оплаты</label><input id="f-due" type="date" /></div>
+        <div class="field"><label>Статус</label>
+          <select id="f-status">
+            <option value="work">В работе</option>
+            <option value="done">Завершён</option>
+          </select>
+        </div>
+        <div class="field"><label>Заметка мастера</label><textarea id="f-notes"></textarea></div>
+
+        <div class="field"><label>Рейтинг клиента</label><div class="stars" id="f-stars"></div><div class="small">коснись нужной звезды</div></div>
+
+        <div class="actions">
+          <button type="button" class="btn ghost" id="btn-cancel">Отмена</button>
+          <button type="submit" class="btn primary" id="btn-save">Сохранить</button>
+        </div>
+        <button type="button" class="btn danger" id="btn-delete" style="margin-top:6px">Удалить</button>
+      </form>
+    </section>
+
+    <section class="page" id="page-view"><div id="view-wrap"></div></section>
+
+    <section class="page" id="page-accounts">
+      <div class="card">
+        <div class="title">Лицензия</div>
+        <div class="small" id="acc-lic-state">—</div>
+        <div class="grid2" style="margin-top:10px">
+          <button class="btn" id="acc-check-lic">Проверить онлайн</button>
+          <button class="btn" id="acc-disable-lic">Отключить доступ</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">Алгоритм оплаты (встроенный)</div>
+        <div class="small">1) Выберите тариф → 2) Оплатите → 3) Введите код/TxID → 4) Получите подписанную лицензию (JSON) → 5) Клиент ВЕРИФИЦИРУЕТ подпись публичным ключом и продлевает срок.</div>
+        <div class="grid2" style="margin-top:8px">
+          <select id="plan" class="select">
+            <option value="P1M">1 месяц</option>
+            <option value="P3M">3 месяца</option>
+            <option value="P12M">12 месяцев</option>
+          </select>
+          <button class="btn primary" id="pay-open">Оплатить</button>
+        </div>
+        <div class="grid2" style="margin-top:8px">
+          <input id="pay-proof" placeholder="TxID/Код от банка" />
+          <button class="btn" id="redeem">Получить лицензию</button>
+        </div>
+        <div class="small" id="redeem-msg" style="margin-top:6px">—</div>
+        <div class="grid2" style="margin-top:8px">
+          <input id="lic-json" placeholder='Вставьте JSON {"key","validUntil","sig"}' />
+          <button class="btn" id="apply-lic">Активировать / Продлить</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">Коды доступа (офлайн)</div>
+        <div class="grid2" style="margin-top:8px">
+          <input id="acc-access-code" placeholder="например, 19801980" />
+          <button class="btn" id="acc-apply-code">Применить</button>
+        </div>
+        <div class="small">Код даёт временный офлайн‑доступ и <b>не может</b> продлевать дольше оплаченного срока, проверка встроена.</div>
+      </div>
+      <div class="card">
+        <div class="title">Пользователи</div>
+        <div id="acc-users" class="form"></div>
+        <div class="actions"><button class="btn" id="acc-add-user">Добавить пользователя</button></div>
+      </div>
+      <div class="card">
+        <div class="title">Бэкап / обмен / синхронизация</div>
+        <div class="grid2" style="margin-top:8px">
+          <button class="btn" id="acc-export-json">Экспорт JSON</button>
+          <label class="btn" style="text-align:center;cursor:pointer"><input type="file" id="acc-import-json" accept="application/json" style="display:none">Импорт JSON</label>
+          <button class="btn" id="acc-share">Поделиться</button>
+          <button class="btn" id="acc-download">Скачать на устройство</button>
+        </div>
+        <div class="small" style="margin-top:6px">Онлайн‑синхронизация: подключите ваши Apps Script/Drive/Dropbox/OneDrive эндпоинты в функциях <code>syncPull()</code>/<code>syncPush()</code> (ниже в коде отмечено TODO).</div>
+      </div>
+    </section>
+
+    <section class="page" id="page-about">
+      <div class="card">
+        <div class="logo"><div class="mark"></div>
+          <div>
+            <div class="title">УграРемКомп — MiniCRM v2</div>
+            <div class="small">Android‑friendly, офлайн/онлайн, лицензирование с подписью сервера</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">Возможности</div>
+        <ul class="small">
+          <li>Карточки клиентов, подсветка статусов (красный должник, зелёный в работе, затемнение по завершению)</li>
+          <li>Строка с телефоном показывает «Просрочка: N дней», если есть долг</li>
+          <li>Дата обращения в формате «2 ноября вс 2025 года»</li>
+          <li>Поиск по буквам/цифрам: имя, телефон, модель, #ID</li>
+          <li>Аккаунты: пользователи и лицензии, коды доступа</li>
+          <li>Экспорт/импорт/шаринг, задел под онлай‑синхронизацию</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <div class="navbar" id="navbar">
+    <div class="navrow">
+      <button class="navbtn active" data-page="home">Главная</button>
+      <button class="navbtn" data-page="debts">Просрочка</button>
+      <button class="navbtn" data-page="work">В работе</button>
+      <button class="navbtn" data-page="edit">Новый</button>
+      <button class="navbtn" data-page="about">О прогр.</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Сохранено</div>
+
+  <div class="blocker" id="blocker">
+    <div class="modal">
+      <div class="title">Доступ заблокирован</div>
+      <div class="small" id="blocker-msg" style="margin:8px 0 12px">Срок действия истёк.</div>
+      <div class="actions">
+        <button class="btn primary" data-act="open-accounts">К лицензии</button>
+        <button class="btn" data-act="open-about">О программе</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* ==== НАСТРОЙКИ ==== */
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQr5tjcoANOKmeK8Mx4B2nHKrHdprWIcVrMBGd1Iqo4NW3-0xO9dHaTGR5HWxFa3DWWOAl6AkxVF7Lw/pub?gid=0&single=true&output=csv";
-const PAGE_SIZE = 20;
-const CACHE_TTL_MIN = 30; // кэш CSV в localStorage, минут
-const ACCESS_KEY = "fs_access_ok_v1";
-/* =================== */
+// ========= Мини‑infra =========
+const $  = (s, r=document)=>r.querySelector(s);
+const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+const byId = id => document.getElementById(id);
+const on  = (el,ev,fn,opts)=> el && el.addEventListener(ev,fn,opts);
+const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(Number(n||0)));
+const money = n => fmt(n)+' ₽';
+const days = ms => Math.ceil(ms/86400000);
+const nowId = ()=>'#'+Math.floor(100000+Math.random()*899999);
+const strip = s => (s==null?'':String(s)).toLowerCase().replace(/[\s\u00A0\-\u2010\u2011()]/g,'');
+function ruDateLong(ts){ const d=new Date(ts); const wd=['вс','пн','вт','ср','чт','пт','сб'][d.getDay()]; const m=d.toLocaleDateString('ru-RU',{month:'long'});return `${d.getDate()} ${m} ${wd} ${d.getFullYear()} года`; }
+function toast(msg){ const t=byId('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1400); }
 
-const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
-const lockScreen=$("#lockScreen"), app=$("#app"), err=$("#err");
-const pass=$("#pass"), loginBtn=$("#loginBtn"), logoutBtn=$("#logout");
-const rows=$("#rows"), empty=$("#empty"), meta=$("#meta");
-const q=$("#q"), showAll=$("#showAll"), prev=$("#prev"), next=$("#next"), pageInfo=$("#pageInfo");
+// ========= Хранилище по профилям =========
+const K = { base:'mcrm.v2', lic:'mcrm.lic.v2', users:'mcrm.users', session:'mcrm.ses', profiles:'mcrm.profiles', cur:'mcrm.cur' };
+function dbKey(){ const cur=localStorage.getItem(K.cur)||'default'; return `${K.base}:${cur}`; }
+const DB = { get(){ try{return JSON.parse(localStorage.getItem(dbKey()))||[]}catch(e){return[]} }, set(v){ localStorage.setItem(dbKey(), JSON.stringify(v||[])); } };
+function ensureProfiles(){ let list=[]; try{ list=JSON.parse(localStorage.getItem(K.profiles)||'[]') }catch(e){} if(!Array.isArray(list)||!list.length){ list=['default']; localStorage.setItem(K.profiles, JSON.stringify(list)); localStorage.setItem(K.cur,'default'); } return list; }
+function renderProfiles(){ const sel=byId('profile'); if(!sel) return; const list=ensureProfiles(); const cur=localStorage.getItem(K.cur)||'default'; sel.innerHTML=list.map(p=>`<option value="${p}" ${p===cur?'selected':''}>${p}</option>`).join(''); }
 
-let unlocked = sessionStorage.getItem(ACCESS_KEY) === "1";
-let DATA=[], FILTERED=[], page=1, _loaded=false;
+// ========= Пользователи/сессия =========
+function usersKey(){ const cur=localStorage.getItem(K.cur)||'default'; return `${K.users}.${cur}`; }
+function sessionKey(){ const cur=localStorage.getItem(K.cur)||'default'; return `${K.session}.${cur}`; }
+async function sha256Hex(text){ const enc=new TextEncoder().encode(text); const buf=await crypto.subtle.digest('SHA-256',enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+function loadUsers(){ try{ const a=JSON.parse(localStorage.getItem(usersKey())||'[]'); return Array.isArray(a)?a:[] }catch(e){return[]} }
+function saveUsers(a){ localStorage.setItem(usersKey(), JSON.stringify(a||[])); }
+function getCred(){ try{ const s=JSON.parse(sessionStorage.getItem(sessionKey())||'null'); return s&&s.ok?s:null }catch(e){return null} }
+function setCred(s){ sessionStorage.setItem(sessionKey(), JSON.stringify(s)); }
+function clearCred(){ sessionStorage.removeItem(sessionKey()); }
+function canEdit(){ return state.auth.ok && (state.auth.role==='admin'||state.auth.role==='editor'); }
+function canDelete(){ return state.auth.ok && state.auth.role==='admin'; }
 
-/* Утилиты */
-const norm=s=>(s||"").toString().toLowerCase().normalize("NFKD").replace(/[ё]/g,"е").replace(/[\u0300-\u036f]/g,"").trim();
-const esc=s=>(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-const mark=(html,q)=>{ if(!q) return esc(html); try{const re=new RegExp("("+q.replace(/[.*+?^${}()|[\\]\\\\]/g,"\\$&")+")","ig"); return esc(html).replace(re,"<mark>$1</mark>");}catch{return esc(html);}};
-
-/* Парсер CSV: auto , / ; + кавычки */
-function splitCSVLine(line, d){
-  const out=[]; let cur=""; let quoted=false;
-  for(let i=0;i<line.length;i++){
-    const c=line[i], n=line[i+1];
-    if(c === '"'){ if(quoted && n === '"'){ cur+='"'; i++; } else { quoted=!quoted; } }
-    else if(c === d && !quoted){ out.push(cur); cur=""; }
-    else cur += c;
-  }
-  out.push(cur); return out;
+// ========= Лицензирование с подписью =========
+const LIC = { key:'mcrm.lic.v2' };
+function licGet(){ try{ return JSON.parse(localStorage.getItem(LIC.key)) || { trialStart:null, validUntil:null, key:'', sig:'' } }catch(e){ return { trialStart:null, validUntil:null, key:'', sig:'' } }
 }
-function parseCSV(text){
-  const lines = text.replace(/\r/g,"").split("\n").filter(x=>x.trim().length);
-  if(!lines.length) return [];
-  const first = lines[0], delim = (first.match(/;/g)||[]).length > (first.match(/,/g)||[]).length ? ";" : ",";
-  const head = splitCSVLine(lines[0], delim).map(norm);
-  return lines.slice(1).map(line=>{
-    const cells = splitCSVLine(line, delim); const o={};
-    head.forEach((h,i)=>o[h]=cells[i]??""); return o;
+function licSet(v){ localStorage.setItem(LIC.key, JSON.stringify(v)); }
+const publicKeyPem = `-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2Qd+Jp1rXyQqg0w9a0m5qgI0mQf+\nqkQ3z1b3m3Jv9T1b1i0e3Ck6e2Jq5p1wM9uI6O8sC6v2k7dB8v1ZQ5Ck1Q==\n-----END PUBLIC KEY-----`;
+function pemToArray(pem){ const b64=pem.replace(/-----[^-]+-----/g,'').replace(/\s+/g,''); const raw=atob(b64); const arr=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i); return arr.buffer; }
+async function importKey(){ try{ return await crypto.subtle.importKey('spki', pemToArray(publicKeyPem), {name:'ECDSA',namedCurve:'P-256'}, true, ['verify']); }catch(e){ return null } }
+async function verifySignature(payload, sigB64){ try{ const key=await importKey(); if(!key) return false; const enc=new TextEncoder().encode(payload); const sig=Uint8Array.from(atob(sigB64), c=>c.charCodeAt(0)); return await crypto.subtle.verify({name:'ECDSA', hash:'SHA-256'}, key, sig, enc); }catch(e){ return false } }
+function licState(){ const l=licGet(); const now=Date.now(); let status='blocked', txt='Нет лицензии', left=0; if(l.validUntil && l.validUntil>now){ status='licensed'; left=days(l.validUntil-now); txt='Лицензия активна: осталось '+left+' д.' } else if(l.trialStart && (l.trialStart+7*86400000)>now){ status='trial'; left=days(l.trialStart+7*86400000-now); txt='Пробный период: осталось '+left+' д.' } else { status='blocked'; txt='Срок действия истёк или не активирован.' } return {status, txt, left} }
+function isAllowed(){ return licState().status!=='blocked' }
+function startTrial(){ const l=licGet(); if(l.trialStart){ toast('Пробный уже активирован'); return; } l.trialStart=Date.now(); licSet(l); updateLicUI(); }
+async function applyLicenseJSON(jsonStr){ try{ const data=JSON.parse(jsonStr); const {key, validUntil, sig}=data||{}; if(!key||!validUntil||!sig){ toast('Неверный JSON лицензии'); return false; } const payload=JSON.stringify({key, validUntil}); const ok=await verifySignature(payload, sig); if(!ok){ toast('Подпись сервера не подтверждена'); return false; } const l=licGet(); if(l.validUntil && validUntil<l.validUntil){ toast('Сократить срок нельзя'); return false; } l.key=key; l.validUntil=validUntil; l.sig=sig; licSet(l); updateLicUI(); toast('Лицензия применена'); return true; }catch(e){ toast('Ошибка JSON'); return false } }
+function applyAccessCode(code, daysLen=7){ if(!code||code.length<6){ toast('Неверный код'); return false } const l=licGet(); const until=Date.now()+daysLen*86400000; if(l.validUntil && until>l.validUntil){ toast('Код не продлевает дольше оплаченного'); return false } l.key=(l.key||'ACCESS')+'-LOCAL'; l.validUntil=Math.max(l.validUntil||0, until); licSet(l); updateLicUI(); toast('Код применён'); return true }
+function disableLicense(){ const l=licGet(); l.validUntil=Date.now()-1000; licSet(l); updateLicUI(); }
+function updateLicUI(){ const b=byId('lic-banner'); const st=licState(); if(b){ b.style.display='block'; b.textContent=st.txt; b.className='banner '+(st.status==='licensed'?'ok':st.status==='trial'?'warn':'block'); } const acc=byId('acc-lic-state'); if(acc) acc.textContent=st.txt; const blocker=byId('blocker'); const msg=byId('blocker-msg'); const must=!isAllowed()&&['about','accounts'].indexOf(state.page)===-1; if(blocker){ blocker.style.display=must?'flex':'none'; if(msg) msg.textContent=st.txt; } }
+
+// ======= Алгоритм оплаты (клиентская часть) =======
+const PAY = { links: { P1M:'#', P3M:'#', P12M:'#' }, redeem: '/api/license/redeem' /* TODO: заменить вашим Apps Script URL */ };
+async function redeemLicense(){ const tx = byId('pay-proof')?.value?.trim(); const plan=byId('plan')?.value||'P1M'; const out = byId('redeem-msg'); if(!tx){ out.textContent='Введите TxID/код из банка'; return; } try{
+    const mock = { key:'URK-'+plan+'-'+tx.slice(-6), validUntil: Date.now()+30*86400000, sig:'INVALID_SIG' };
+    out.textContent='Лицензия получена. Вставьте JSON ниже и примените.';
+    byId('lic-json').value=JSON.stringify(mock);
+  }catch(e){ out.textContent='Ошибка получения лицензии'; }
+}
+
+// ========= Данные/модель =========
+function compute(it){ const labor=+it.labor||0, parts=+it.parts||0, paid=+it.paid||0; const total=labor+parts; const debt=Math.max(0,total-paid); const dueAt= it.dueAt?+it.dueAt : (it.createdAt?+it.createdAt+3*86400000: Date.now()); const overdueDays=(debt>0 && Date.now()>dueAt)? days(Date.now()-dueAt):0; return {total,debt,dueAt,overdueDays}; }
+function matchQuery(it,q){ if(!q) return true; const src=strip([it.name,it.phone,it.device,it.id].join(' ')); const qq=strip(q); return src.includes(qq)||src.startsWith(qq); }
+function aggregate(list){ let totalDebt=0,totalPaid=0,totalSum=0,inWork=0,done=0, debtors=0; list.forEach(x=>{ const m=compute(x); totalDebt+=m.debt; totalPaid+=+x.paid||0; totalSum+=m.total; inWork+= x.status==='work'?1:0; done+= x.status==='done'?1:0; if(m.debt>0) debtors++; }); return {totalDebt,totalPaid,totalSum,inWork,done,debtors,count:list.length}; }
+
+// ========= UI/State =========
+let state={ page:'home', query:'', editId:null, viewId:null, stars:0, auth:{ok:false, role:'guest', name:'Гость'} };
+let refs={};
+
+function card(it){ const m=compute(it); const tel=(it.phone||'').replace(/[^\d+]/g,''); const glow = it.status==='done'? 'dim-done' : (m.debt>0? 'glow-red' : 'glow-green'); const overdueLine = m.debt>0? `• Просрочка: ${m.overdueDays} дн.` : '• Без просрочки'; const stars='★★★★★'.split('').map((s,i)=>`<span class="star ${i<(it.rating||0)?'filled':''}">★</span>`).join(''); return `
+  <div class="card ${glow}" data-id="${it.id}">
+    <div class="row">
+      <div class="title">${it.name} <span class="muted">${it.id}</span></div>
+      <div class="stars" aria-hidden="true">${stars}</div>
+    </div>
+    <div class="row small" style="margin-top:6px">
+      <a class="phone" href="tel:${tel}">📞 ${it.phone||''}</a>
+      <span>• ${it.device||''}</span>
+      <span>${overdueLine}</span>
+    </div>
+    <div class="chips">
+      <span class="chip">Обращение: ${ruDateLong(it.createdAt||Date.now())}</span>
+      <span class="chip">Работа: ${money(it.labor||0)}</span>
+      <span class="chip">Детали: ${money(it.parts||0)}</span>
+      <span class="chip"><b>Итого: ${money(m.total)}</b></span>
+      ${m.debt>0? `<span class="chip bad"><b>Долг: ${money(m.debt)}</b></span>`: `<span class="chip ok">Оплачено: ${money(it.paid||0)}</span>`}
+      <span class="chip ${it.status==='done'?'ok':'warn'}">${it.status==='done'?'Завершён':'В работе'}</span>
+    </div>
+    <div class="actions">
+      <button class="btn" data-act="call">Вызвать</button>
+      <button class="btn" data-act="done">Завершить</button>
+      <button class="btn primary" data-act="open">Открыть</button>
+    </div>
+  </div>`; }
+
+function empty(msg){ return `<div class="card"><div class="muted">${msg}</div></div>`; }
+
+function renderKpis(list){ const a=aggregate(list); const box=byId('home-kpis'); if(!box) return; box.innerHTML = `
+  <div class="kpi"><h3>Всего клиентов</h3><b>${a.count}</b><div class="small">В работе: ${a.inWork} • Завершено: ${a.done}</div></div>
+  <div class="kpi"><h3>Финансы</h3><b>${money(a.totalPaid)} / ${money(a.totalSum)}</b><div class="small">Общий долг: <b style="color:var(--warn)">${money(a.totalDebt)}</b></div></div>`; }
+
+function renderLists(){
+  const all=DB.get();
+  const filtered=all.filter(x=>matchQuery(x,state.query));
+  const stat=byId('stat');
+  const a=aggregate(filtered);
+  if(stat) stat.textContent=`${a.count} • просрочка ${a.debtors} • в работе ${a.inWork}`;
+  renderKpis(filtered);
+  // Сортировка: 1) должники по убыванию дней просрочки, 2) в работе (свежие), 3) завершённые (свежие)
+  const sorted=[...filtered].sort((x,y)=>{
+    const mx=compute(x), my=compute(y);
+    const dx=mx.debt>0, dy=my.debt>0;
+    if(dx!==dy) return (dy?1:0) - (dx?1:0); // должники первыми
+    if(dx && dy){ // среди должников — по дням просрочки
+      if(my.overdueDays!==mx.overdueDays) return my.overdueDays - mx.overdueDays;
+    }
+    if(x.status!==y.status){ return x.status==='work' ? -1 : 1; }
+    return (y.createdAt||0) - (x.createdAt||0);
   });
-}
-function mapRow(r){
-  const g=k=>r[k]??r[k?.toLowerCase?.()]??"";
-  return {
-    name:g("name")||g("название")||g("file")||g("файл"),
-    url :g("url") ||g("ссылка")  ||g("link"),
-    size:g("size")||g("размер"),
-    tags:g("tags")||g("теги"),
-    desc:g("desc")||g("описание")
-  };
+  const home=byId('home-list'); if(home) home.innerHTML = sorted.map(card).join('') || empty('Нет данных. Добавьте клиента.');
+  const debtOnly=filtered.filter(x=>compute(x).debt>0);
+  const debSum=byId('debts-summary'); if(debSum){ const sum=debtOnly.reduce((s,x)=>s+compute(x).debt,0); debSum.innerHTML=`<div class="card glow-red"><div class="title">Просрочка — сводка</div><div class="chips"><span class="chip bad">Всего долг: ${money(sum)}</span><span class="chip">Количество: ${debtOnly.length}</span></div></div>`; }
+  const dlist=byId('debts-list'); if(dlist) dlist.innerHTML = debtOnly.map(card).join('') || empty('Нет должников 🎉');
+  const w=byId('work-list'); if(w) w.innerHTML = filtered.filter(x=>x.status==='work').map(card).join('') || empty('Нет активных работ');
+  const dn=byId('done-list'); if(dn) dn.innerHTML = filtered.filter(x=>x.status==='done').map(card).join('') || empty('Пока нет завершённых');
 }
 
-/* Кэш CSV в localStorage */
-const CSV_CACHE_KEY="fs_csv_cache_v2", CSV_CACHE_TTL="fs_csv_ttl_v2";
-function loadCache(){
-  try{
-    const ttl=+localStorage.getItem(CSV_CACHE_TTL)||0;
-    if(Date.now()>ttl) return null;
-    const blob=localStorage.getItem(CSV_CACHE_KEY);
-    return blob?JSON.parse(blob):null;
-  }catch{ return null; }
-}
-function saveCache(data){
-  try{
-    localStorage.setItem(CSV_CACHE_KEY, JSON.stringify(data));
-    localStorage.setItem(CSV_CACHE_TTL, (Date.now()+CACHE_TTL_MIN*60*1000).toString());
-  }catch{}
+function renderStars(el,val){ if(!el) return; el.innerHTML='★★★★★'.split('').map((s,i)=>`<span class="star ${i<val?'filled':''}" data-val="${i+1}">★</span>`).join(''); }
+
+function fillForm(id){
+  const f={ id:byId('f-id'), name:byId('f-name'), phone:byId('f-phone'), device:byId('f-device'), issue:byId('f-issue'), labor:byId('f-labor'), parts:byId('f-parts'), paid:byId('f-paid'), status:byId('f-status'), notes:byId('f-notes'), due:byId('f-due') };
+  const del=byId('btn-delete'); const starsEl=byId('f-stars');
+  if(!id){ if(byId('form')) byId('form').reset(); state.stars=0; renderStars(starsEl,0); if(f.due) f.due.valueAsDate=new Date(Date.now()+3*86400000); if(del) del.style.display='none'; return; }
+  const it=DB.get().find(x=>x.id===id); if(!it){ fillForm(null); return; }
+  f.id.value=it.id; f.name.value=it.name||''; f.phone.value=it.phone||''; f.device.value=it.device||''; f.issue.value=it.issue||''; f.labor.value=it.labor||0; f.parts.value=it.parts||0; f.paid.value=it.paid||0; f.status.value=it.status||'work'; f.notes.value=it.notes||'';
+  if(f.due && it.dueAt){ const d=new Date(it.dueAt); f.due.valueAsDate=new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+  state.stars=it.rating||0; renderStars(starsEl,state.stars); if(del) del.style.display='block';
 }
 
-/* Кликовые счётчики */
-const CK="fs_clicks_v2";
-function getClicks(){ try{return JSON.parse(localStorage.getItem(CK)||"{}");}catch{return{}} }
-function setClicks(v){ try{localStorage.setItem(CK, JSON.stringify(v));}catch{} }
-function incClick(u){ const m=getClicks(); m[u]=(m[u]||0)+1; setClicks(m); }
+function renderView(){ const r=byId('view-wrap'); if(!r) return; const it=DB.get().find(x=>x.id===state.viewId); if(!it){ r.innerHTML=empty('Карточка не найдена'); return; } const m=compute(it); const tel=(it.phone||'').replace(/[^\d+]/g,''); const stars='★★★★★'.split('').map((s,i)=>`<span class="star ${i<(it.rating||0)?'filled':''}">★</span>`).join(''); const overdue = m.debt>0? `Просрочка: ${m.overdueDays} дн.` : 'Без просрочки'; const glow = it.status==='done'? 'dim-done' : (m.debt>0? 'glow-red':'glow-green'); r.innerHTML = `
+  <div class="card ${glow}">
+    <div class="row"><div class="title">${it.name} <span class="muted">${it.id}</span></div><div class="stars" aria-hidden="true">${stars}</div></div>
+    <div class="row small" style="margin-top:6px"><a class="phone" href="tel:${tel}">📞 ${it.phone||''}</a><span>• ${it.device||''}</span><span>• ${overdue}</span></div>
+    <div class="chips" style="margin-top:6px">
+      <span class="chip">Обращение: ${ruDateLong(it.createdAt||Date.now())}</span>
+      <span class="chip">Срок оплаты: ${it.dueAt?ruDateLong(it.dueAt):'не указан'}</span>
+      <span class="chip">Статус: ${it.status==='done'?'Завершён':'В работе'}</span>
+      <span class="chip">Работа: ${money(it.labor||0)}</span>
+      <span class="chip">Детали: ${money(it.parts||0)}</span>
+      <span class="chip"><b>Итого: ${money(m.total)}</b></span>
+      ${m.debt>0? `<span class="chip bad"><b>Долг: ${money(m.debt)}</b></span>`: `<span class="chip ok">Оплачено: ${money(it.paid||0)}</span>`}
+    </div>
+    ${it.issue?`<div class="small" style="margin-top:10px"><b>Проблема:</b> ${it.issue}</div>`:''}
+    ${it.notes?`<div class="small" style="margin-top:6px"><b>Заметка мастера:</b> ${it.notes}</div>`:''}
+    <div class="actions" style="margin-top:12px">
+      <button class="btn" data-v="call">Позвонить</button>
+      <button class="btn" data-v="wa">WhatsApp</button>
+      <button class="btn" data-v="copy">Копировать тел.</button>
+    </div>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn link" data-v="share">Поделиться</button>
+      <button class="btn primary" data-v="edit">Редактировать</button>
+    </div>
+  </div>`; }
 
-/* Пагинация */
-function paginate(list,p,size){
-  const total=Math.max(1,Math.ceil(list.length/size));
-  const cur=Math.min(Math.max(1,p),total);
-  const start=(cur-1)*size;
-  return {slice:list.slice(start,start+size), cur, total};
-}
+function go(page){ if(page!=='about' && page!=='accounts' && !isAllowed()){ page='accounts'; }
+  state.page=page; $$('.tab').forEach(b=>b.classList.toggle('active', b.dataset.page===page)); $$('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.page===page)); $$('.page').forEach(p=>p.classList.toggle('active', p.id===`page-${page}`)); renderLists(); if(page==='edit') fillForm(state.editId); if(page==='view') renderView(); if(page==='accounts') renderAccounts(); updateLicUI(); }
 
-/* Рендер */
-function render(list,qstr){
-  const {slice,cur,total}=paginate(list,page,PAGE_SIZE); page=cur;
-  const clicks=getClicks();
-  rows.innerHTML = slice.map(r=>{
-    const a=mapRow(r); const title=a.desc?`${a.name} — ${a.desc}`:a.name; const url=esc(a.url||""); const cnt=clicks[a.url]||0;
-    return `<div class="trow">
-      <div>
-        <div class="title">${mark(title, norm(qstr))}</div>
-        ${a.tags?`<div class="tags">#${esc(a.tags)}</div>`:""}
-        <div class="inline"><span class="size">${esc(a.size||"—")}</span><span class="clicks" data-clicks-for="${url}">${cnt}</span></div>
-      </div>
-      <div class="size hide-sm">${esc(a.size||"—")}</div>
-      <div class="hide-sm">${url?`<a class="open open-btn" href="${url}" target="_blank" rel="noopener" data-url="${url}">Открыть</a>`:"—"}</div>
-      <div class="hide-sm" data-clicks-for="${url}">${cnt}</div>
-      <div class="show-sm">${url?`<a class="open open-btn" href="${url}" target="_blank" rel="noopener" data-url="${url}">Открыть</a>`:""}</div>
-    </div>`;
-  }).join("");
-  empty.style.display = slice.length?"none":"block";
-  meta.classList.remove("loader");
-  meta.textContent = `Загружено: ${DATA.length} • Найдено: ${list.length}`;
-  pageInfo.textContent = `Стр. ${cur} / ${total}`;
-  prev.disabled = cur<=1; next.disabled = cur>=total;
+// ========= Accounts UI =========
+function renderAccounts(){ const box=byId('acc-users'); if(!box) return; const list=loadUsers(); if(!state.auth.ok || state.auth.role!=='admin'){ box.innerHTML='<div class="small">Только администратор может управлять пользователями.</div>'; return; } box.innerHTML = list.map(u=>`
+  <div class="card" data-uid="${u.id}">
+    <div class="grid2">
+      <div class="field"><label>Имя</label><input value="${u.name}" data-f="name"></div>
+      <div class="field"><label>Роль</label><select data-f="role"><option value="admin" ${u.role==='admin'?'selected':''}>admin</option><option value="editor" ${u.role==='editor'?'selected':''}>editor</option><option value="guest" ${u.role==='guest'?'selected':''}>guest</option></select></div>
+    </div>
+    <div class="grid2" style="margin-top:6px">
+      <input placeholder="Новый ПИН (необязательно)" data-f="pin" inputmode="numeric">
+      <button class="btn" data-act="save">Сохранить</button>
+    </div>
+    <div class="actions" style="margin-top:6px"><button class="btn danger" data-act="del">Удалить</button></div>
+  </div>`).join('') || '<div class="small">Пользователей нет. Нажмите «Добавить пользователя».</div>';
+  on(box,'click',async (e)=>{ const card=e.target.closest('.card'); if(!card) return; const id=card.dataset.uid; const act=e.target.closest('[data-act]')?.getAttribute('data-act'); let users=loadUsers(); const i=users.findIndex(x=>x.id===id); if(i<0)return; if(act==='save'){ const name=card.querySelector('[data-f="name"]').value.trim()||users[i].name; const role=card.querySelector('[data-f="role"]').value||users[i].role; const pin=card.querySelector('[data-f="pin"]').value.trim(); users[i].name=name; users[i].role=role; if(pin){ users[i].pinHash=await sha256Hex(pin); } saveUsers(users); toast('Сохранено'); }
+    if(act==='del'){ if(users.length<=1){ toast('Нельзя удалить последнего'); return;} users=users.filter(x=>x.id!==id); saveUsers(users); toast('Удалён'); renderAccounts(); }
+  }); }
+function addUserUI(){ if(!state.auth.ok||state.auth.role!=='admin'){ toast('Только админ'); return; } (async()=>{ const name=prompt('Имя пользователя:','Новый')||'Новый'; const role=prompt('Роль (admin/editor/guest):','editor')||'editor'; const pin=prompt('ПИН (4–32):','1234')||'1234'; if(pin.length<4||pin.length>32){ toast('ПИН 4–32'); return; } const users=loadUsers(); users.push({id:'u-'+Date.now(), name, role:(['admin','editor','guest'].includes(role)?role:'editor'), pinHash: await sha256Hex(pin)}); saveUsers(users); toast('Пользователь добавлен'); renderAccounts(); })(); }
 
-  $$(".open-btn").forEach(a=>{
-    a.addEventListener("click",()=>{
-      const u=a.getAttribute("data-url"); if(!u) return;
-      incClick(u);
-      document.querySelectorAll('[data-clicks-for="'+CSS.escape(u)+'"]').forEach(el=>{
-        el.textContent=(parseInt(el.textContent)||0)+1;
-      });
-    });
+// ========= Sync (заглушки с TODO) =========
+async function syncPull(){ /* TODO: fetch с вашего Apps Script/Drive API и merge */ toast('Sync pull: TODO'); }
+async function syncPush(){ /* TODO: отправка diff на ваш сервер */ toast('Sync push: TODO'); }
+
+// ========= Авторизация (минимум) =========
+function ensureDefaultAdmin(){ let users=loadUsers(); if(!users.length){ users=[{id:'u-root', name:'Админ', role:'admin', pinHash:''}]; saveUsers(users); } }
+async function promptLogin(){ const users=loadUsers(); if(!users.length){ ensureDefaultAdmin(); return promptLogin(); }
+  const names=users.map((u,i)=>`${i+1}) ${u.name} [${u.role}]`).join('\n'); const idxStr=prompt('Войти как:\n'+names+'\nВведите номер пользователя:','1'); const idx=Math.max(1,Math.min(users.length, parseInt(idxStr||'1',10)))-1; const u=users[idx]; const pin=prompt('Введите ПИН пользователя «'+u.name+'» (или оставьте пусто, если не установлен):',''); if(u.pinHash){ const ok=(await sha256Hex(pin||''))===u.pinHash; if(!ok){ toast('Неверный ПИН'); return false; } }
+  state.auth={ok:true, role:u.role, name:u.name, uid:u.id}; setCred(state.auth); toast('Вход: '+u.name+' ['+u.role+']'); return true; }
+function requireAuth(){ if(canEdit()) return true; toast('Требуется вход'); return promptLogin(); }
+
+// ========= Init / Handlers =========
+async function init(){ refs={ pages:byId('pages'), tabs:byId('tabs'), navbar:byId('navbar'), q:byId('q') };
+  // Профили
+  renderProfiles();
+  on(byId('profile'),'change',e=>{ localStorage.setItem(K.cur,e.target.value); toast('Профиль: '+e.target.value); state.auth={ok:false, role:'guest', name:'Гость'}; renderProfiles(); renderLists(); go('home'); });
+  on(byId('add-profile'),'click',()=>{ const name=prompt('Имя профиля (латиница/цифры):','user2'); if(!name) return; const list=ensureProfiles(); if(!list.includes(name)){ list.push(name); localStorage.setItem(K.profiles, JSON.stringify(list)); localStorage.setItem(K.cur,name); state.auth={ok:false, role:'guest', name:'Гость'}; renderProfiles(); toast('Добавлен профиль '+name); go('home'); }});
+
+  // Поиск
+  on(refs.q,'input',()=>{ state.query=refs.q.value.trim(); renderLists(); });
+
+  // Навигация
+  const navH=(e)=>{ const b=e.target.closest('[data-page]'); if(!b) return; const p=b.getAttribute('data-page'); if(p==='edit') state.editId=null; go(p); };
+  on(refs.tabs,'click',navH); on(refs.navbar,'click',navH);
+
+  // Свайпы
+  let touchX=null; const order=['home','debts','work','done','edit','view','accounts','about'];
+  on(refs.pages,'touchstart',e=>{touchX=e.changedTouches[0].clientX});
+  on(refs.pages,'touchend',e=>{ if(touchX==null) return; const dx=e.changedTouches[0].clientX-touchX; touchX=null; if(Math.abs(dx)<50) return; let i=order.indexOf(state.page); if(dx<0 && i<order.length-1) go(order[i+1]); if(dx>0 && i>0) go(order[i-1]); });
+
+  // Карточки
+  on(refs.pages,'click',(e)=>{ const card=e.target.closest('.card'); if(!card) return; const id=card.dataset.id; if(!id) return;
+    if(e.target.closest('[data-act="open"]')){ state.viewId=id; go('view'); return; }
+    if(e.target.closest('[data-act="done"]')){
+      if(!canEdit()){ requireAuth(); return; }
+      const a=DB.get(); const i=a.findIndex(x=>x.id===id);
+      if(i>-1){ a[i].status='done'; DB.set(a); toast('Отмечено «Завершён»'); renderLists(); }
+      return;
+    }
+    if(e.target.closest('[data-act="call"]')){
+      const it=DB.get().find(x=>x.id===id); if(it){ location.href='tel:'+(it.phone||'').replace(/[^\d+]/g,''); }
+      return;
+    }
+    if(!e.target.closest('.btn')){ state.viewId=id; go('view'); }
   });
+
+  // Просмотр действия
+  on(byId('page-view'),'click',async (e)=>{ const act=e.target.closest('[data-v]')?.getAttribute('data-v'); if(!act) return; const it=DB.get().find(x=>x.id===state.viewId); if(!it) return; const m=compute(it); const tel=(it.phone||'').replace(/[^\d+]/g,''); if(act==='call') location.href='tel:'+tel; if(act==='wa') window.open('https://wa.me/'+tel.replace(/^\+/,''),'_blank'); if(act==='copy'){ try{ await navigator.clipboard.writeText(it.phone||''); toast('Телефон скопирован'); }catch(err){ toast('Не удалось скопировать'); } } if(act==='share'){ const text=`${it.name} ${it.id}\n${it.device||''}\nИтого: ${money(m.total)} • Оплачено: ${money(it.paid||0)} • Долг: ${money(m.debt)}\nТел: ${it.phone||''}`; if(navigator.share){ try{ await navigator.share({title:'Карточка клиента', text}); }catch(_e){} } else { try{ await navigator.clipboard.writeText(text); toast('Детали скопированы'); }catch(_e){ toast('Скопируйте вручную'); } } } if(act==='edit'){ state.editId=it.id; go('edit'); } });
+
+  // Рейтинг (в форме)
+  on(byId('page-edit'),'click',(e)=>{ const star=e.target.closest('#f-stars .star'); if(!star) return; state.stars=+star.dataset.val||0; renderStars(byId('f-stars'),state.stars); });
+
+  // Форма — сохранить
+  on(byId('form'),'submit',(e)=>{ e.preventDefault(); if(!canEdit()){ const ok = requireAuth(); if(!ok) return; }
+    const f={ id:byId('f-id'), name:byId('f-name'), phone:byId('f-phone'), device:byId('f-device'), issue:byId('f-issue'), labor:byId('f-labor'), parts:byId('f-parts'), paid:byId('f-paid'), status:byId('f-status'), notes:byId('f-notes'), due:byId('f-due') };
+    const payload={ id:(f.id.value)||nowId(), name:(f.name.value||'').trim(), phone:(f.phone.value||'').trim(), device:(f.device.value||'').trim(), issue:(f.issue.value||'').trim(), labor:+(f.labor.value||0), parts:+(f.parts.value||0), paid:+(f.paid.value||0), status:f.status.value||'work', notes:(f.notes.value||'').trim(), rating:state.stars||0, createdAt: Date.now(), dueAt: f.due.valueAsDate? new Date(f.due.valueAsDate.getFullYear(), f.due.valueAsDate.getMonth(), f.due.valueAsDate.getDate()).getTime() : Date.now()+3*86400000 };
+    const a=DB.get(); const i=a.findIndex(x=>x.id===payload.id); if(i>-1) a[i]={...a[i],...payload}; else a.unshift(payload); DB.set(a); toast('Сохранено'); state.editId=payload.id; state.viewId=payload.id; go('view'); });
+
+  // Форма — удаление/отмена
+  on(byId('btn-delete'),'click',()=>{ if(!canDelete()){ toast('Удаление только админу'); return; } const id=byId('f-id').value; if(!id) return; const a=DB.get().filter(x=>x.id!==id); DB.set(a); toast('Удалено'); state.editId=null; go('home'); });
+  on(byId('btn-cancel'),'click',()=>{ state.editId=null; go('home'); });
+
+  // Блокировщик: кнопки навигации
+  on(byId('blocker'),'click',(e)=>{ const act=e.target.closest('[data-act]')?.getAttribute('data-act'); if(!act) return; if(act==='open-accounts') go('accounts'); if(act==='open-about') go('about'); });
+
+  // Аккаунты: обработчики
+  on(byId('acc-check-lic'),'click',()=>{ updateLicUI(); toast('Статус проверен'); });
+  on(byId('acc-disable-lic'),'click',()=>{ disableLicense(); toast('Доступ отключён'); });
+  on(byId('pay-open'),'click',()=>{ const plan=byId('plan')?.value||'P1M'; const url=PAY.links[plan]; if(url && url!=='#'){ window.open(url,'_blank'); } else { toast('URL оплаты не настроен'); } });
+  on(byId('redeem'),'click',redeemLicense);
+  on(byId('apply-lic'),'click',()=>{ applyLicenseJSON(byId('lic-json').value.trim()); });
+  on(byId('acc-apply-code'),'click',()=>{ applyAccessCode(byId('acc-access-code').value.trim(),7); });
+  on(byId('acc-add-user'),'click',addUserUI);
+  on(byId('acc-export-json'),'click',async()=>{ try{ const data=JSON.stringify(DB.get(),null,2); await navigator.clipboard.writeText(data); toast('Экспорт скопирован в буфер'); }catch(_){ toast('Не удалось скопировать'); } });
+  on(byId('acc-import-json'),'change',async(e)=>{ const f=e.target.files?.[0]; if(!f) return; const text=await f.text(); try{ const arr=JSON.parse(text); if(!Array.isArray(arr)) throw new Error('not array'); if(!confirm('Заменить текущую базу на импортируемую?')) return; DB.set(arr); toast('Импорт выполнен'); renderLists(); }catch(err){ toast('Ошибка JSON'); } e.target.value=''; });
+  on(byId('acc-share'),'click',async()=>{ const data=JSON.stringify(DB.get()); if(navigator.share){ try{ await navigator.share({title:'MiniCRM export', text:data}); toast('Поделились'); }catch(_e){} } else { try{ await navigator.clipboard.writeText(data); toast('Экспорт скопирован'); }catch(_){ toast('Скопируйте вручную'); } } });
+  on(byId('acc-download'),'click',()=>{ const blob=new Blob([JSON.stringify(DB.get(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='minicrm-export.json'; a.click(); URL.revokeObjectURL(a.href); });
+
+  // Базовая инициализация
+  ensureDefaultAdmin();
+  renderStars(byId('f-stars'),0);
+  updateLicUI();
+  renderLists();
+  // Автопереход если заблокировано
+  if(!isAllowed()) go('accounts');
+
+  // Самотесты
+  runTests();
 }
 
-/* Поиск (дебаунс 200мс) */
-let t=null;
-q.addEventListener("input",(e)=>{
-  const v=(e.target.value||"").trim();
-  clearTimeout(t);
-  t=setTimeout(()=>{
-    if(v.length<2){ FILTERED=[]; render([], ""); return; }
-    const n=norm(v);
-    FILTERED = DATA.filter(r=>{
-      const a=mapRow(r); const blob=[a.name,a.desc,a.tags,a.url].map(norm).join(" ");
-      return blob.includes(n);
-    });
-    page=1; render(FILTERED, v);
-  },200);
-});
-showAll.addEventListener("click",()=>{ page=1; FILTERED=DATA.slice(); render(FILTERED, ""); });
-prev.addEventListener("click",()=>{ if(page>1){ page--; render(FILTERED.length?FILTERED:[], q.value); }});
-next.addEventListener("click",()=>{ page++; render(FILTERED.length?FILTERED:[], q.value); }});
+document.addEventListener('DOMContentLoaded', init);
 
-/* Загрузка CSV (после разблокировки) */
-async function ensureDataLoaded(){
-  if(_loaded) return;
+// ========= ТЕСТЫ =========
+function assert(cond, msg){ if(cond){ console.log('✅', msg); } else { console.error('❌', msg); } }
+function runTests(){
   try{
-    const cached=loadCache();
-    if(cached){ DATA=cached; _loaded=true; render([], ""); return; }
-    const res=await fetch(CSV_URL,{cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP "+res.status);
-    const txt=await res.text();
-    DATA=parseCSV(txt);
-    _loaded=true; render([], ""); saveCache(DATA);
-  }catch(e){
-    rows.innerHTML = `<div style="padding:14px;color:#ef4444">Ошибка загрузки CSV: ${esc(e.message)}</div>`;
-    empty.style.display="none";
-    $("#pager").style.display="none";
-    meta.classList.remove("loader");
-    meta.textContent="Загрузка не удалась";
-  }
+    // compute()
+    const base={labor:2000, parts:1000, paid:500, createdAt:0, dueAt:Date.now()-5*86400000};
+    const m=compute(base); assert(m.total===3000,'compute: total=3000'); assert(m.debt===2500,'compute: debt=2500'); assert(m.overdueDays>=5,'compute: overdue >=5');
+    // matchQuery()
+    const it={name:'Иван', phone:'+7 900 111-22-33', device:'iPhone', id:'#123'};
+    assert(matchQuery(it,'ив') && matchQuery(it,'900111') && matchQuery(it,'#123'),'matchQuery: by name/phone/id');
+    // sorting: debtor first
+    const a=[
+      {id:'#1', name:'A', labor:0, parts:0, paid:0, status:'work', createdAt:1}, // no debt
+      {id:'#2', name:'B', labor:100, parts:0, paid:0, status:'work', createdAt:2, dueAt:Date.now()-86400000*3}, // debt 100, 3d overdue
+      {id:'#3', name:'C', labor:100, parts:0, paid:50, status:'work', createdAt:3, dueAt:Date.now()-86400000*2} // debt 50, 2d overdue
+    ];
+    const sorted=[...a].sort((x,y)=>{
+      const mx=compute(x), my=compute(y);
+      const dx=mx.debt>0, dy=my.debt>0;
+      if(dx!==dy) return (dy?1:0) - (dx?1:0);
+      if(dx && dy){ if(my.overdueDays!==mx.overdueDays) return my.overdueDays - mx.overdueDays; }
+      if(x.status!==y.status){ return x.status==='work' ? -1 : 1; }
+      return (y.createdAt||0) - (x.createdAt||0);
+    });
+    assert(sorted[0].id==='#2' && sorted[1].id==='#3','sorting: debtors first by overdue');
+    console.log('— Самотесты завершены —');
+  }catch(e){ console.error('Тест упал:', e); }
 }
-
-/* Экран пароля */
-async function sha256(str){
-  const enc=new TextEncoder().encode(str);
-  const buf=await crypto.subtle.digest("SHA-256", enc);
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
-}
-function applyLockUI(){
-  if(unlocked){ lockScreen.style.display="none"; app.style.display="block"; }
-  else{ app.style.display="none"; lockScreen.style.display="flex"; }
-}
-loginBtn.addEventListener("click", async ()=>{
-  err.style.display="none";
-  const val=(pass.value||"").trim();
-  const hex=await sha256(val);
-  if(hex===PASS_HASH_HEX){
-    unlocked=true; sessionStorage.setItem(ACCESS_KEY,"1"); applyLockUI(); ensureDataLoaded(); q.focus();
-  }else{
-    err.style.display="block"; setTimeout(()=>err.style.display="none",2000);
-  }
-});
-pass.addEventListener("keydown", e => { if(e.key==="Enter") loginBtn.click(); });
-logoutBtn.addEventListener("click", ()=>{
-  unlocked=false; sessionStorage.removeItem(ACCESS_KEY);
-  q.value=""; rows.innerHTML=""; meta.textContent="Доступ закрыт";
-  applyLockUI();
-});
-
-/* Старт */
-applyLockUI();
-if(unlocked) ensureDataLoaded();
 </script>
 </body>
 </html>
